@@ -4,81 +4,62 @@ const packageJson = readFileSync('package.json', 'utf8');
 const version = JSON.parse(packageJson).version;
 
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  // Disable full SSR for SWA deployment (SPA mode)
+  ssr: true, 
+  // target: 'static', // pre-render pages at build time (optional)
 
-  future: {
-    compatibilityVersion: 4
-  },
-
-  ssr: true,
-
+  // Head and global styles
   app: {
     head: {
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.svg' }
-      ]
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.svg' }]
     }
   },
+  css: ['@/assets/global.css'],
 
-  // when enabling ssr option you need to disable inlineStyles and maybe devLogs
-  features: {
-    inlineStyles: false,
-    devLogs: false,
-  },
+  // Devtools and experimental features
+  devtools: { enabled: true },
+  future: { compatibilityVersion: 4 },
+  features: { inlineStyles: false, devLogs: false },
 
-  build: {
-    transpile: ['vuetify'],
-  },
+  // Build configuration
+  build: { transpile: ['vuetify'] },
+  vite: { ssr: { noExternal: ['vuetify'] } },
 
-  vite: {
-    ssr: {
-      noExternal: ['vuetify'],
-    },
-  },
-
-  css: [
-    '@/assets/global.css'
-  ],
+  // Modules
   modules: ['@nuxt/fonts', 'vuetify-nuxt-module', '@nuxt/eslint', 'nuxt-auth-utils'],
 
+  // Vuetify configuration
   vuetify: {
     moduleOptions: {
-      // check https://nuxt.vuetifyjs.com/guide/server-side-rendering.html
       ssrClientHints: {
         reloadOnFirstRequest: false,
         viewportSize: true,
         prefersColorScheme: false,
-
-        prefersColorSchemeOptions: {
-          useBrowserThemeOnly: false,
-        },
+        prefersColorSchemeOptions: { useBrowserThemeOnly: false },
       },
-
-      // /* If customizing sass global variables ($utilities, $reset, $color-pack, $body-font-family, etc) */
-      // disableVuetifyStyles: true,
-      styles: {
-        configFile: 'assets/settings.scss',
-      },
+      styles: { configFile: 'assets/settings.scss' },
     },
   },
 
+  // Auth configuration (GitHub OAuth)
   auth: {
     github: {
       enabled: true,
-      clientId: '',
-      clientSecret: ''
+      clientId: '', // set via runtime config or env
+      clientSecret: '' // set via runtime config or env
     }
   },
+
+  // Nitro configuration for SWA
   nitro: {
-    plugins: [
-      'plugins/http-agent',
-    ],
+    preset: 'azure', // critical for SWA
+    plugins: ['plugins/http-agent'],
   },
+
+  // Runtime configuration
   runtimeConfig: {
     githubToken: '',
     session: {
-      // set to 6h - same as the GitHub token
       maxAge: 60 * 60 * 6,
       password: '',
     },
@@ -89,8 +70,8 @@ export default defineNuxtConfig({
       }
     },
     public: {
-      isDataMocked: false,  // can be overridden by NUXT_PUBLIC_IS_DATA_MOCKED environment variable
-      scope: 'organization',  // can be overridden by NUXT_PUBLIC_SCOPE environment variable
+      isDataMocked: false,  
+      scope: 'organization',
       githubOrg: '',
       githubEnt: '',
       githubTeam: '',
@@ -99,4 +80,4 @@ export default defineNuxtConfig({
       isPublicApp: false
     }
   }
-})
+});
